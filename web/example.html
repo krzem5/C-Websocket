@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width,initial-scale=1">
+		<title>Websocket Example</title>
+		<script type="text/javascript">
+			const PORT=8080;
+
+			let _input_element=null;
+			let _output_element=null;
+			let _websocket=null;
+
+			function _add_text_line(line){
+				_output_element.value+=line+"\n";
+				_output_element.scrollTop=_output_element.scrollHeight;
+			}
+
+			document.addEventListener("DOMContentLoaded",_=>{
+				document.getElementById("url").innerHTML=`URL: <i>ws://localhost:${PORT}/</i>`;
+				_input_element=document.getElementById("input");
+				_output_element=document.getElementById("output");
+				_input_element.onkeyup=(event)=>{
+					if (event.keyCode!=10&&event.keyCode!=13){
+						return;
+					}
+					let value=_input_element.value;
+					_input_element.value="";
+					if (_websocket){
+						_add_text_line(`<= ${value}`);
+						_websocket.send(value);
+						return;
+					}
+					_websocket=new WebSocket(`ws://localhost:${PORT}`);
+					_websocket.onopen=_=>{
+						_add_text_line("(Connected)");
+						_add_text_line(`<= ${value}`);
+						_websocket.send(value);
+					}
+					_websocket.onmessage=(event)=>{
+						_add_text_line(`=> ${event.data}`);
+					}
+					_websocket.onclose=_=>{
+						_add_text_line("(Disconnected)");
+						_websocket=null;
+					}
+				}
+			},false);
+		</script>
+	</head>
+	<body>
+		<h1>Websocket example</h1>
+		<p id="url"></p>
+		<input type="text" id="input" value="" placeholder="Message"><br><br>
+		<textarea id="output" rows="16" cols="64" readonly="true"></textarea>
+	</body>
+</html>
